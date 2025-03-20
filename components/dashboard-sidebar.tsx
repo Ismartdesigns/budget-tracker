@@ -44,7 +44,6 @@ export default function DashboardSidebar() {
         </div>
         <div className="space-y-1 pt-4">
           <SidebarLink href="/dashboard/profile" icon={<User className="h-4 w-4" />} title="Profile" />
-          {/* <SidebarLink href="/dashboard/settings" icon={<Settings className="h-4 w-4" />} title="Settings" /> */}
         </div>
       </div>
     </aside>
