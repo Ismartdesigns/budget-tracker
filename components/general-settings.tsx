@@ -10,17 +10,12 @@ import { useToast } from "@/hooks/use-toast"
 import { Loader2, Search } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
+import { useCurrency } from "@/context/currency-context"
 
 type User = {
   id: string
   name: string
   email: string
-}
-
-interface Currency {
-  code: string
-  name: string
-  symbol: string
 }
 
 interface GeneralSettingsProps {
@@ -30,92 +25,21 @@ interface GeneralSettingsProps {
 export default function GeneralSettings({ user }: GeneralSettingsProps) {
   const router = useRouter()
   const { toast } = useToast()
+  const { currentCurrency, setCurrency, currencies, isLoading: isLoadingCurrencies } = useCurrency()
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [currencies, setCurrencies] = useState<Currency[]>([])
-  const [isLoadingCurrencies, setIsLoadingCurrencies] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [settings, setSettings] = useState({
-    currency: "USD",
+    currency: currentCurrency.code || "USD",
     theme: "light",
     enableAnalytics: true,
   })
 
+  // Update the settings currency when the context currency changes
   useEffect(() => {
-    const fetchCurrencies = async () => {
-      try {
-        // Fetch currencies from an API
-        const response = await fetch('https://openexchangerates.org/api/currencies.json')
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch currencies')
-        }
-        
-        const data = await response.json()
-        
-        // Transform the data into the format we need
-        const currencyList: Currency[] = Object.entries(data).map(([code, name]) => ({
-          code,
-          name: name as string,
-          symbol: getCurrencySymbol(code)
-        })).sort((a, b) => a.name.localeCompare(b.name))
-        
-        setCurrencies(currencyList)
-      } catch (error) {
-        console.error('Error fetching currencies:', error)
-        toast({
-          title: "Error",
-          description: "Failed to load currencies. Using default options.",
-          variant: "destructive",
-        })
-        
-        // Fallback to default currencies
-        setCurrencies([
-          { code: "USD", name: "US Dollar", symbol: "$" },
-          { code: "EUR", name: "Euro", symbol: "€" },
-          { code: "GBP", name: "British Pound", symbol: "£" },
-          { code: "JPY", name: "Japanese Yen", symbol: "¥" },
-          { code: "CAD", name: "Canadian Dollar", symbol: "C$" },
-          { code: "AUD", name: "Australian Dollar", symbol: "A$" },
-          { code: "CNY", name: "Chinese Yuan", symbol: "¥" },
-          { code: "INR", name: "Indian Rupee", symbol: "₹" },
-          { code: "BRL", name: "Brazilian Real", symbol: "R$" },
-          { code: "RUB", name: "Russian Ruble", symbol: "₽" },
-        ])
-      } finally {
-        setIsLoadingCurrencies(false)
-      }
+    if (currentCurrency.code) {
+      setSettings(prev => ({ ...prev, currency: currentCurrency.code }))
     }
-    
-    fetchCurrencies()
-  }, [toast])
-
-  // Helper function to get currency symbols
-  const getCurrencySymbol = (code: string): string => {
-    const symbols: Record<string, string> = {
-      "USD": "$",
-      "EUR": "€",
-      "GBP": "£",
-      "JPY": "¥",
-      "CAD": "C$",
-      "AUD": "A$",
-      "CNY": "¥",
-      "INR": "₹",
-      "BRL": "R$",
-      "RUB": "₽",
-      "KRW": "₩",
-      "MXN": "Mex$",
-      "CHF": "Fr",
-      "SGD": "S$",
-      "HKD": "HK$",
-      "SEK": "kr",
-      "NOK": "kr",
-      "DKK": "kr",
-      "PLN": "zł",
-      "ZAR": "R",
-    }
-    
-    return symbols[code] || code
-  }
+  }, [currentCurrency])
 
   const handleSwitchChange = (name: string) => {
     setSettings((prev) => ({ ...prev, [name]: !prev[name as keyof typeof prev] }))
@@ -131,11 +55,10 @@ export default function GeneralSettings({ user }: GeneralSettingsProps) {
 
     try {
       // In a real app, this would update the user settings in the database
-      // For now, we'll just simulate a successful update
       await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // You would typically update global state or context here
-      // to reflect the new currency across the application
+      
+      // Update the currency in the context so it's available app-wide
+      setCurrency(settings.currency)
       
       toast({
         title: "Settings updated",
@@ -163,6 +86,14 @@ export default function GeneralSettings({ user }: GeneralSettingsProps) {
     currency.code.toLowerCase().includes(searchQuery.toLowerCase())
   )
 
+  // Show a selected currency even if it's not in our list
+  const selectedCurrencyDisplay = () => {
+    const found = currencies.find(c => c.code === settings.currency)
+    if (found) return found.name
+    if (settings.currency === "USD") return "US Dollar"
+    return `${settings.currency}`
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-4">
@@ -177,7 +108,7 @@ export default function GeneralSettings({ user }: GeneralSettingsProps) {
                     Loading currencies...
                   </div>
                 ) : (
-                  currencies.find(c => c.code === settings.currency)?.name || "Select currency"
+                  selectedCurrencyDisplay()
                 )}
               </SelectValue>
             </SelectTrigger>
