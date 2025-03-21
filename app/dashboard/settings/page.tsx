@@ -14,11 +14,11 @@ export default async function SettingsPage() {
   }
 
   return (
-    <>
+    <div className="p-6 md:p-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">
-          Manage your application preferences and account settings
+          Manage your preferences, security settings, and account configurations.
         </p>
       </div>
 
@@ -32,7 +32,7 @@ export default async function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>General Settings</CardTitle>
-              <CardDescription>Configure your application preferences</CardDescription>
+              <CardDescription>Customize your application preferences and notifications.</CardDescription>
             </CardHeader>
             <CardContent>
               <GeneralSettings user={user} />
@@ -44,7 +44,7 @@ export default async function SettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Security Settings</CardTitle>
-              <CardDescription>Update your password and security preferences</CardDescription>
+              <CardDescription>Update your password and manage authentication settings.</CardDescription>
             </CardHeader>
             <CardContent>
               <SecuritySettings userId={user.id} />
@@ -52,6 +52,6 @@ export default async function SettingsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </>
+    </div>
   )
 }

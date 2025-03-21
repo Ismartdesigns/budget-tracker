@@ -20,7 +20,14 @@ export default async function DashboardPage() {
   const hasMongoDb = Boolean(process.env.MONGODB_URI)
 
   return (
-    <>
+    <div className="p-6 md:p-8">
+      <div className="mb-6">
+        <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+        <p className="text-muted-foreground">
+          Get an overview of your financial status, recent transactions, and AI-driven insights.
+        </p>
+      </div>
+
       {!hasMongoDb && (
         <Alert className="mb-6 bg-yellow-50 text-yellow-800 border-yellow-200">
           <InfoIcon className="h-4 w-4" />
@@ -46,6 +53,7 @@ export default async function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
         <FinancialOverview userId={user.id} />
       </div>
+
       <div className="mt-6 grid gap-6 md:grid-cols-2 lg:grid-cols-7">
         <div className="col-span-1 md:col-span-1 lg:col-span-4">
           <RecentTransactions userId={user.id} />
@@ -57,6 +65,6 @@ export default async function DashboardPage() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }

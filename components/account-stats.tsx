@@ -10,6 +10,14 @@ interface AccountStatsProps {
   userId: string;
 }
 
+// Define the user profile interface based on the actual data structure
+interface UserProfile {
+  id: string;
+  name: string;
+  email: string;
+  bio: string;
+}
+
 export default function AccountStats({ userId }: AccountStatsProps) {
   const [stats, setStats] = useState({
     totalTransactions: 0,
@@ -45,8 +53,15 @@ export default function AccountStats({ userId }: AccountStatsProps) {
           lastActivity = new Date(Math.max(...dates.map((date: Date) => date.getTime()))).toLocaleDateString();
         }
 
-        // Mock account age (replace with actual user creation date)
-        const accountAge = 30; // Replace this with actual logic
+        // Calculate account age based on first transaction date if available
+        // This is an alternative approach since we don't have createdAt
+        let accountAge = 0;
+        if (totalTransactions > 0) {
+          const dates = financialData.expenses.map((expense: Expense) => new Date(expense.date));
+          const oldestTransaction = new Date(Math.min(...dates.map((date: Date) => date.getTime())));
+          const today = new Date();
+          accountAge = Math.floor((today.getTime() - oldestTransaction.getTime()) / (1000 * 60 * 60 * 24));
+        }
 
         setStats({
           totalTransactions,
@@ -82,37 +97,74 @@ export default function AccountStats({ userId }: AccountStatsProps) {
     );
   }
 
+  // Format account age to be more user-friendly
+  const formatAccountAge = (days: number) => {
+    if (days === 0) return "New account";
+    if (days === 1) return "1 day";
+    if (days < 30) return `${days} days`;
+    if (days < 365) {
+      const months = Math.floor(days / 30);
+      return `${months} ${months === 1 ? 'month' : 'months'}`;
+    }
+    const years = Math.floor(days / 365);
+    const remainingMonths = Math.floor((days % 365) / 30);
+    
+    if (remainingMonths === 0) {
+      return `${years} ${years === 1 ? 'year' : 'years'}`;
+    }
+    
+    return `${years} ${years === 1 ? 'year' : 'years'}, ${remainingMonths} ${remainingMonths === 1 ? 'month' : 'months'}`;
+  };
+
+  // Calculate the estimated creation date based on the account age
+  const estimatedCreationDate = stats.accountAge > 0 
+    ? new Date(Date.now() - stats.accountAge * 24 * 60 * 60 * 1000).toLocaleDateString()
+    : "Today";
+
   return (
     <div className="grid gap-4 md:grid-cols-2">
       <Card>
         <CardContent className="p-6">
-          <CreditCard className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Total Transactions</span>
-          <div className="mt-2 text-2xl font-bold">{stats.totalTransactions}</div>
+          <div className="flex items-center mb-2">
+            <CreditCard className="h-4 w-4 text-muted-foreground mr-2" />
+            <span className="text-sm font-medium">Total Transactions</span>
+          </div>
+          <div className="text-2xl font-bold">{stats.totalTransactions}</div>
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="p-6">
-          <CalendarDays className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Account Age</span>
-          <div className="mt-2 text-2xl font-bold">{stats.accountAge} days</div>
+          <div className="flex items-center mb-2">
+            <CalendarDays className="h-4 w-4 text-muted-foreground mr-2" />
+            <span className="text-sm font-medium">Account Age</span>
+          </div>
+          <div className="text-2xl font-bold">{formatAccountAge(stats.accountAge)}</div>
+          {stats.accountAge > 0 && (
+            <div className="text-xs text-muted-foreground mt-1">
+              First activity: {estimatedCreationDate}
+            </div>
+          )}
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="p-6">
-          <Clock className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Last Activity</span>
-          <div className="mt-2 text-2xl font-bold">{stats.lastActivity}</div>
+          <div className="flex items-center mb-2">
+            <Clock className="h-4 w-4 text-muted-foreground mr-2" />
+            <span className="text-sm font-medium">Last Activity</span>
+          </div>
+          <div className="text-2xl font-bold">{stats.lastActivity}</div>
         </CardContent>
       </Card>
 
       <Card>
         <CardContent className="p-6">
-          <LineChart className="h-4 w-4 text-muted-foreground" />
-          <span className="text-sm font-medium">Categories Used</span>
-          <div className="mt-2 text-2xl font-bold">{stats.categoriesUsed}</div>
+          <div className="flex items-center mb-2">
+            <LineChart className="h-4 w-4 text-muted-foreground mr-2" />
+            <span className="text-sm font-medium">Categories Used</span>
+          </div>
+          <div className="text-2xl font-bold">{stats.categoriesUsed}</div>
         </CardContent>
       </Card>
     </div>

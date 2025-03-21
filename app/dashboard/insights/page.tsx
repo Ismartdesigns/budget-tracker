@@ -16,10 +16,13 @@ export default async function InsightsPage() {
   const financialData = await getFinancialDataForUser(user.id)
 
   return (
-    <>
+    <div className="p-6 md:p-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight">AI Insights</h1>
-        <p className="text-muted-foreground">Get personalized financial insights and recommendations</p>
+        <p className="text-muted-foreground">
+          Gain deeper financial insights powered by AI. Analyze your spending habits, visualize trends, and receive
+          personalized recommendations to optimize your finances.
+        </p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -53,6 +56,6 @@ export default async function InsightsPage() {
           </CardContent>
         </Card>
       </div>
-    </>
+    </div>
   )
 }

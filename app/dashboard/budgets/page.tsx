@@ -22,10 +22,13 @@ export default async function BudgetsPage() {
   }))
 
   return (
-    <>
+    <div className="p-6 md:p-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Budgets</h1>
-        <p className="text-muted-foreground">Create and manage your budgets</p>
+        <p className="text-muted-foreground">
+          Take control of your finances by setting up budgets for different categories. Monitor your spending, adjust 
+          limits, and ensure you stay on track with your financial goals.
+        </p>
       </div>
 
       <Tabs defaultValue="list" className="w-full">
@@ -56,6 +59,6 @@ export default async function BudgetsPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </>
+    </div>
   )
 }

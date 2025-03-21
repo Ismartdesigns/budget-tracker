@@ -22,10 +22,12 @@ export default async function ExpensesPage() {
   }))
 
   return (
-    <>
+    <div className="p-6 md:p-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Expenses</h1>
-        <p className="text-muted-foreground">Track and manage your expenses</p>
+        <p className="text-muted-foreground">
+          Keep track of your spending and manage your expenses efficiently.
+        </p>
       </div>
 
       <Tabs defaultValue="list" className="w-full">
@@ -56,6 +58,6 @@ export default async function ExpensesPage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </>
+    </div>
   )
 }

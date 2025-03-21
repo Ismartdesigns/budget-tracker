@@ -47,10 +47,15 @@ export default async function ReportsPage() {
   }
 
   return (
-    <>
+    <div className="p-6 md:p-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">Budget Reports</h1>
-        <DateRangePicker className="date-range-picker" />
+        <p className="text-muted-foreground">
+          Analyze your spending habits, track your expenses, and gain insights to improve your financial management.
+        </p>
+        <div className="mt-4">
+          <DateRangePicker className="date-range-picker" />
+        </div>
       </div>
 
       <div className="grid gap-6">
@@ -74,6 +79,6 @@ export default async function ReportsPage() {
           </div>
         </div>
       </div>
-    </>
+    </div>
   )
 }

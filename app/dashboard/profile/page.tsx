@@ -14,10 +14,12 @@ export default async function ProfilePage() {
   }
 
   return (
-    <>
+    <div className="p-6 md:p-8">
       <div className="mb-6">
         <h1 className="text-3xl font-bold tracking-tight">Profile</h1>
-        <p className="text-muted-foreground">Manage your account information and preferences</p>
+        <p className="text-muted-foreground">
+          Manage your personal details, update preferences, and review your account activity.
+        </p>
       </div>
 
       <Tabs defaultValue="personal" className="w-full">
@@ -25,22 +27,24 @@ export default async function ProfilePage() {
           <TabsTrigger value="personal">Personal Information</TabsTrigger>
           <TabsTrigger value="stats">Account Statistics</TabsTrigger>
         </TabsList>
+
         <TabsContent value="personal">
           <Card>
             <CardHeader>
               <CardTitle>Personal Information</CardTitle>
-              <CardDescription>Update your personal details and profile settings</CardDescription>
+              <CardDescription>Update your personal details and profile settings.</CardDescription>
             </CardHeader>
             <CardContent>
               <ProfileForm user={user} />
             </CardContent>
           </Card>
         </TabsContent>
+
         <TabsContent value="stats">
           <Card>
             <CardHeader>
               <CardTitle>Account Statistics</CardTitle>
-              <CardDescription>Overview of your account activity and usage</CardDescription>
+              <CardDescription>Overview of your account activity and usage.</CardDescription>
             </CardHeader>
             <CardContent>
               <AccountStats userId={user.id} />
@@ -48,6 +52,6 @@ export default async function ProfilePage() {
           </Card>
         </TabsContent>
       </Tabs>
-    </>
+    </div>
   )
 }
