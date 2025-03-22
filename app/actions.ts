@@ -253,6 +253,93 @@ export async function addBudget(userId: string, budgetData: { category: string; 
 }
 
 export async function generateAiInsights(financialData: FinancialData) {
+  try {
+    // Ensure OpenAI API key is available
+    if (!process.env.OPENAI_API_KEY) {
+      console.error("OpenAI API key is not defined in environment variables");
+      return getDefaultInsights(financialData);
+    }
+
+    // Format the financial data for the AI to analyze
+    const promptData = {
+      totalSpent: financialData.totalSpent,
+      totalBudget: financialData.totalBudget,
+      categorySummary: financialData.categorySummary,
+      expenseCount: financialData.expenses.length,
+      budgetCount: financialData.budgets.length,
+      // Add recent expenses for context (limit to 10 most recent)
+      recentExpenses: financialData.expenses
+        .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+        .slice(0, 10)
+        .map(e => ({
+          amount: e.amount,
+          category: e.category,
+          description: e.description,
+          date: e.date
+        }))
+    };
+
+    // Create a prompt that asks for insights and recommendations
+    const prompt = `
+      Based on the following financial data, provide 2-4 specific insights about the user's spending patterns and 2-4 actionable recommendations.
+      
+      Financial Summary:
+      - Total Budget: $${promptData.totalBudget.toFixed(2)}
+      - Total Spent: $${promptData.totalSpent.toFixed(2)}
+      - Number of Expenses: ${promptData.expenseCount}
+      - Number of Budget Categories: ${promptData.budgetCount}
+      
+      Category Spending:
+      ${Object.entries(promptData.categorySummary)
+        .map(([category, amount]) => `- ${category}: $${amount.toFixed(2)}`)
+        .join('\n')}
+      
+      Recent Expenses:
+      ${promptData.recentExpenses
+        .map(e => `- $${e.amount.toFixed(2)} on ${e.category} (${e.date}): ${e.description}`)
+        .join('\n')}
+      
+      Provide the response in the following JSON format:
+      {
+        "insights": [
+          {"title": "Insight Title", "description": "Detailed explanation of the insight"}
+        ],
+        "recommendations": [
+          {"title": "Recommendation Title", "description": "Detailed explanation of the recommendation"}
+        ]
+      }
+    `;
+
+    // Use the AI SDK to generate the insights with API key from env vars
+    const response = await generateText({
+      model: openai('gpt-3.5-turbo'),  // Using the free gpt-3.5-turbo model
+      prompt: prompt,
+      temperature: 0.7,
+      maxTokens: 1000,
+      // The OpenAI SDK will automatically use OPENAI_API_KEY from env
+    });
+
+    // Parse the JSON response
+    try {
+      const parsedResponse = JSON.parse(response.text);
+      return {
+        insights: parsedResponse.insights || [],
+        recommendations: parsedResponse.recommendations || []
+      };
+    } catch (parseError) {
+      console.error("Error parsing AI response:", parseError);
+      // Fallback to default insights if parsing fails
+      return getDefaultInsights(financialData);
+    }
+  } catch (error) {
+    console.error("Error generating AI insights:", error);
+    // Return default insights if AI generation fails
+    return getDefaultInsights(financialData);
+  }
+}
+
+// Helper function to generate default insights when the AI call fails
+function getDefaultInsights(financialData: FinancialData) {
   const insights = [];
   const recommendations = [];
 
@@ -260,40 +347,59 @@ export async function generateAiInsights(financialData: FinancialData) {
   if (financialData.totalSpent > financialData.totalBudget) {
     insights.push({
       title: "Over Budget",
-      description: "You have exceeded your budget this month. Consider reviewing your spending habits.",
+      description: "You have exceeded your total budget. Consider reviewing your spending habits.",
     });
     recommendations.push({
-      title: "Review Your Budget",
-      description: "Adjust your budget categories to better reflect your spending patterns.",
+      title: "Adjust Your Budget",
+      description: "Consider increasing your budget in categories where you consistently overspend, or look for ways to reduce expenses in those areas.",
     });
+  } else if (financialData.totalBudget > 0) {
+    const usagePercentage = (financialData.totalSpent / financialData.totalBudget) * 100;
+    if (usagePercentage > 90) {
+      insights.push({
+        title: "Approaching Budget Limit",
+        description: `You've used ${usagePercentage.toFixed(0)}% of your total budget. Monitor your spending closely for the rest of the period.`,
+      });
+    } else if (usagePercentage < 50) {
+      insights.push({
+        title: "Under Budget",
+        description: `You've only used ${usagePercentage.toFixed(0)}% of your total budget, which is well under your planned spending.`,
+      });
+    }
   }
 
-  // Check if there are recorded expenses
-  if (financialData.expenses.length > 0) {
-    insights.push({
-      title: "Expense Tracking",
-      description: "You have recorded expenses this month. Keep tracking to stay on top of your finances.",
-    });
-    recommendations.push({
-      title: "Track Your Spending",
-      description: "Regularly review your expenses to identify areas for potential savings.",
-    });
-  }
-
-  // Analyze spending by category
+  // Category analysis
   if (financialData.categorySummary) {
+    // Find highest spending category
+    let highestCategory = "";
+    let highestAmount = 0;
+    
     for (const [category, amount] of Object.entries(financialData.categorySummary)) {
-      if (amount > 1000) { // Example threshold for high spending
-        insights.push({
-          title: `High Spending in ${category}`,
-          description: `You have spent a significant amount in ${category}. Consider reducing expenses in this area.`,
-        });
-        recommendations.push({
-          title: `Limit ${category} Spending`,
-          description: `Try to limit your spending in ${category} to stay within your budget.`,
-        });
+      if (amount > highestAmount) {
+        highestAmount = amount;
+        highestCategory = category;
       }
     }
+    
+    if (highestCategory) {
+      insights.push({
+        title: `Highest Spending: ${highestCategory}`,
+        description: `Your highest expense category is ${highestCategory} at $${highestAmount.toFixed(2)}.`,
+      });
+      
+      recommendations.push({
+        title: "Review Major Expenses",
+        description: `Consider reviewing your ${highestCategory} expenses to identify potential savings opportunities.`,
+      });
+    }
+  }
+
+  // No expenses recorded
+  if (financialData.expenses.length === 0) {
+    recommendations.push({
+      title: "Start Tracking Expenses",
+      description: "Begin recording your expenses regularly to get more personalized insights.",
+    });
   }
 
   return {

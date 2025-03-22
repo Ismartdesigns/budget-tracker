@@ -20,7 +20,7 @@ type Insight = {
 }
 
 interface AiInsightsFullProps {
-  financialData: any; // Define the expected structure
+  financialData: FinancialData
 }
 
 const AiInsightsFull: React.FC<AiInsightsFullProps> = ({ financialData }) => {
@@ -30,6 +30,24 @@ const AiInsightsFull: React.FC<AiInsightsFullProps> = ({ financialData }) => {
 
   useEffect(() => {
     async function fetchInsights() {
+      if (!financialData || Object.keys(financialData.categorySummary || {}).length === 0) {
+        setLoading(false)
+        // Set default insights for empty data
+        setInsights([
+          {
+            title: "Welcome to AI Insights",
+            description: "Add more transactions to get personalized financial recommendations.",
+          }
+        ])
+        setRecommendations([
+          {
+            title: "Start Tracking",
+            description: "Begin recording your expenses to receive tailored advice.",
+          }
+        ])
+        return
+      }
+      
       try {
         const aiData = await generateAiInsights(financialData)
         setInsights(aiData.insights || [])
@@ -41,9 +59,14 @@ const AiInsightsFull: React.FC<AiInsightsFullProps> = ({ financialData }) => {
           {
             title: "Welcome to AI Insights",
             description: "Add more transactions to get personalized financial recommendations.",
-          },
+          }
         ])
-        setRecommendations([])
+        setRecommendations([
+          {
+            title: "Regular Tracking",
+            description: "Track your expenses consistently to improve your financial awareness.",
+          }
+        ])
       } finally {
         setLoading(false)
       }
@@ -133,4 +156,3 @@ const AiInsightsFull: React.FC<AiInsightsFullProps> = ({ financialData }) => {
 }
 
 export default AiInsightsFull
-

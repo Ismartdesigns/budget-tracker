@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Lightbulb } from "lucide-react"
-import { getFinancialDataForUser, generateAiInsights } from "@/app/actions"
+import { generateAiInsights } from "@/app/actions"
 
 type Insight = {
   title: string
@@ -12,18 +12,33 @@ type Insight = {
 
 interface AiInsightsProps {
   userId: string
+  financialData: any
 }
 
-export default function AiInsights({ userId }: AiInsightsProps) {
+export default function AiInsights({ userId, financialData }: AiInsightsProps) {
   const [insights, setInsights] = useState<Insight[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     async function fetchInsights() {
       try {
-        const financialData = await getFinancialDataForUser(userId)
+        if (!financialData || Object.keys(financialData.categorySummary || {}).length === 0) {
+          setLoading(false)
+          setInsights([
+            {
+              title: "Welcome to AI Insights",
+              description: "Add more transactions to get personalized financial recommendations.",
+            },
+            {
+              title: "Track Your Spending",
+              description: "Regular tracking of your expenses helps identify patterns and opportunities for saving.",
+            },
+          ])
+          return
+        }
+        
         const aiData = await generateAiInsights(financialData)
-        setInsights(aiData.insights.slice(0, 2)) // Show only 2 insights in the summary
+        setInsights(aiData.insights?.slice(0, 2) || []) // Show only 2 insights in the summary
       } catch (error) {
         console.error("Error fetching AI insights:", error)
         // Provide fallback insights when there's an error
@@ -42,8 +57,10 @@ export default function AiInsights({ userId }: AiInsightsProps) {
       }
     }
 
-    fetchInsights()
-  }, [userId])
+    if (financialData) {
+      fetchInsights()
+    }
+  }, [financialData])
 
   return (
     <Card>
@@ -86,4 +103,3 @@ export default function AiInsights({ userId }: AiInsightsProps) {
     </Card>
   )
 }
-

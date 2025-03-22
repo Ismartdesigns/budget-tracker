@@ -13,7 +13,6 @@ export const metadata: Metadata = {
   description: "View your budget reports and analytics",
 }
 
-// Define a proper type for reports
 interface Report {
   expenses: { category: string; amount: number }[]
 }
@@ -47,23 +46,30 @@ export default async function ReportsPage() {
   }
 
   return (
-    <div className="p-6 md:p-8">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">Budget Reports</h1>
-        <p className="text-muted-foreground">
+    <div className="container mx-auto p-4 sm:p-6 md:p-8">
+      {/* Header & Date Picker */}
+      <div className="mb-6 md:text-left">
+        <h1 className="text-2xl sm:text-3xl font-bold">Budget Reports</h1>
+        <p className="text-muted-foreground text-sm sm:text-base">
           Analyze your spending habits, track your expenses, and gain insights to improve your financial management.
         </p>
-        <div className="mt-4">
-          <DateRangePicker className="date-range-picker" />
+        <div className="mt-4 flex justify-center md:justify-start">
+          <DateRangePicker className="w-full max-w-sm" />
         </div>
       </div>
 
+      {/* Main Content Grid */}
       <div className="grid gap-6">
-        <BudgetSummary userId={user.id} />
+        {/* Budget Summary (Full width) */}
+        <div className="w-full">
+          <BudgetSummary userId={user.id} />
+        </div>
 
-        <div className="grid gap-6 md:grid-cols-2">
-          <div className="bg-card rounded-lg border shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Spending by Category</h2>
+        {/* Reports Grid */}
+        <div className="grid gap-6 sm:grid-cols-1 md:grid-cols-2">
+          {/* Spending by Category */}
+          <div className="bg-card rounded-lg border shadow p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-semibold mb-4">Spending by Category</h2>
             <SpendingByCategory
               categories={reports.expenses.map(expense => ({
                 name: expense.category,
@@ -73,8 +79,9 @@ export default async function ReportsPage() {
             />
           </div>
 
-          <div className="bg-card rounded-lg border shadow p-6">
-            <h2 className="text-xl font-semibold mb-4">Monthly Spending</h2>
+          {/* Monthly Spending */}
+          <div className="bg-card rounded-lg border shadow p-4 sm:p-6">
+            <h2 className="text-lg sm:text-xl font-semibold mb-4">Monthly Spending</h2>
             <MonthlySpending userId={user.id} />
           </div>
         </div>

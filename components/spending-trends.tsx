@@ -3,7 +3,11 @@
 import { useEffect, useRef } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { format, subDays } from "date-fns"
-import { Expense } from "@/lib/db"
+
+interface Expense {
+  date: string | Date
+  amount: number
+}
 
 interface SpendingTrendsProps {
   data: Expense[]
@@ -13,7 +17,7 @@ export default function SpendingTrends({ data }: SpendingTrendsProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   useEffect(() => {
-    if (!canvasRef.current || data.length === 0) return
+    if (!canvasRef.current || !data || data.length === 0) return
 
     const ctx = canvasRef.current.getContext("2d")
     if (!ctx) return
@@ -142,7 +146,7 @@ export default function SpendingTrends({ data }: SpendingTrendsProps) {
   return (
     <Card>
       <CardContent className="p-6">
-        {data.length === 0 ? (
+        {!data || data.length === 0 ? (
           <div className="flex items-center justify-center h-[300px] text-muted-foreground">
             Add expenses to see your spending trends
           </div>
@@ -153,4 +157,3 @@ export default function SpendingTrends({ data }: SpendingTrendsProps) {
     </Card>
   )
 }
-
